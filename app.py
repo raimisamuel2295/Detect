@@ -10,47 +10,19 @@ lgb_model = joblib.load("lgb_model.pkl")
 # Initialize FastAPI
 app = FastAPI(title="Credit Card Fraud Detection API")
 
-# Define input transaction schema
 class Transaction(BaseModel):
-    V1: float
-    V2: float
-    V3: float
-    V4: float
-    V5: float
-    V6: float
-    V7: float
-    V8: float
-    V9: float
-    V10: float
-    V11: float
-    V12: float
-    V13: float
-    V14: float
-    V15: float
-    V16: float
-    V17: float
-    V18: float
-    V19: float
-    V20: float
-    V21: float
-    V22: float
-    V23: float
-    V24: float
-    V25: float
-    V26: float
-    V27: float
-    V28: float
-    Amount_log: float
-    Hour: float
-    IsoScore: float  # precomputed Isolation Forest score
+    V1: float; V2: float; V3: float; V4: float; V5: float; V6: float
+    V7: float; V8: float; V9: float; V10: float; V11: float; V12: float
+    V13: float; V14: float; V15: float; V16: float; V17: float; V18: float
+    V19: float; V20: float; V21: float; V22: float; V23: float; V24: float
+    V25: float; V26: float; V27: float; V28: float; Amount_log: float
+    Hour: float; IsoScore: float
 
-# Ensemble thresholds
 LOG_THRESH = 0.98
 LGB_THRESH = 0.02
 
 @app.post("/predict")
 def predict_fraud(tx: Transaction):
-    # Convert input to array
     X_input = np.array([[
         tx.V1, tx.V2, tx.V3, tx.V4, tx.V5, tx.V6, tx.V7, tx.V8,
         tx.V9, tx.V10, tx.V11, tx.V12, tx.V13, tx.V14, tx.V15,
@@ -59,11 +31,9 @@ def predict_fraud(tx: Transaction):
         tx.Amount_log, tx.Hour, tx.IsoScore
     ]])
 
-    # Get model probabilities
     p_log = log_model.predict_proba(X_input)[:,1][0]
     p_lgb = lgb_model.predict_proba(X_input)[:,1][0]
 
-    # Ensemble decision
     fraud_prob = (p_log >= LOG_THRESH) & (p_lgb >= LGB_THRESH)
     
     return {
